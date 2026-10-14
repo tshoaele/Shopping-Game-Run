@@ -1,0 +1,1062 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#eceef1">
+<title>The Reservations</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper:      #eceef1;
+    --ink:        #2b2f36;
+    --ink-soft:   #6b7280;
+    --ink-faint:  #b0b5bc;
+    --rule:       #c9cdd3;
+    --accent:     #3f6fa8;
+
+    --font-main:  'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-sign:  'Cormorant Garamond', Georgia, serif;
+    --size-item:  15px;
+    --size-price: 15px;
+    --size-head:  12px;
+
+    --row-pad-y:  16px;
+    --row-pad-x:  20px;
+    --max-width:  640px;
+
+    --dim-opacity: 0.42;
+    --stroke-ms:   420ms;
+
+    --wm-opacity: 0.35;
+    --wm-size:    17px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-main);
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "tnum" 1;
+    min-height: 100%;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    inset: -40%;
+    z-index: 0;
+    pointer-events: none;
+    background:
+      linear-gradient(
+        115deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,0.35) 38%,
+        rgba(255,255,255,0.06) 46%,
+        rgba(63,111,168,0.05) 60%,
+        rgba(255,255,255,0) 100%
+      );
+    animation: sheen 20s linear infinite;
+    will-change: transform;
+  }
+  @keyframes sheen {
+    0%   { transform: translate3d(-30%, -12%, 0) rotate(0deg); }
+    50%  { transform: translate3d( 30%,  12%, 0) rotate(0.6deg); }
+    100% { transform: translate3d(-30%, -12%, 0) rotate(0deg); }
+  }
+
+  body {
+    padding-bottom: 140px;
+    position: relative;
+  }
+
+  .shell {
+    position: relative;
+    z-index: 1;
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 0 0 40px;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: saturate(1.2) blur(14px);
+    -webkit-backdrop-filter: saturate(1.2) blur(14px);
+    border-bottom: 1px solid var(--rule);
+  }
+  .head-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 14px 20px 12px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .head-title {
+    font-size: var(--size-head);
+    font-weight: 800;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .head-meta {
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+    text-align: right;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+
+  .list { padding: 4px 0 0; }
+
+  .row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: var(--row-pad-y) var(--row-pad-x);
+    border-bottom: 1px solid var(--rule);
+    user-select: none;
+    transition: opacity var(--stroke-ms) ease, background 160ms ease;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .row:active { background: rgba(63,111,168,0.06); }
+
+  .row .idx {
+    flex: 0 0 24px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-faint);
+    letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .row .name {
+    flex: 1 1 auto;
+    font-size: var(--size-item);
+    font-weight: 500;
+    line-height: 1.35;
+    color: var(--ink);
+    transition: color var(--stroke-ms) ease;
+    min-width: 0;
+    word-break: break-word;
+  }
+
+  .price-btn {
+    flex: 0 0 auto;
+    font-size: var(--size-price);
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+    padding: 6px 8px;
+    margin: -6px 0;
+    border-radius: 5px;
+    background: transparent;
+    border: none;
+    font-family: inherit;
+    cursor: text;
+    transition: background 140ms ease, color var(--stroke-ms) ease;
+  }
+  .price-btn:active { background: rgba(0,0,0,0.05); }
+  .price-btn.edited::after {
+    content: "•";
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 0.75em;
+    vertical-align: 0.25em;
+    color: var(--accent);
+    opacity: 0.85;
+  }
+  .price-btn.empty { color: var(--ink-faint); font-weight: 500; }
+
+  .price-input {
+    flex: 0 0 auto;
+    width: 92px;
+    font-size: var(--size-price);
+    font-weight: 600;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+    text-align: right;
+    padding: 6px 8px;
+    margin: -6px 0;
+    border: 1.5px solid var(--accent);
+    border-radius: 5px;
+    background: var(--paper);
+    outline: none;
+    font-family: inherit;
+    -moz-appearance: textfield;
+  }
+  .price-input::-webkit-outer-spin-button,
+  .price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  .icon {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--ink-faint);
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 140ms ease, color 140ms ease, transform 140ms ease;
+  }
+  .icon:active { background: rgba(0,0,0,0.06); transform: scale(0.9); }
+  .icon.clear:active { color: var(--accent); }
+  .icon.remove:active { color: #b91c1c; }
+
+  .row.dim { opacity: var(--dim-opacity); }
+  .row.dim .name { color: var(--ink-soft); }
+  .row.dim .price-btn { color: var(--ink-soft); }
+
+  .row .strike {
+    position: absolute;
+    left: var(--row-pad-x);
+    right: var(--row-pad-x);
+    top: 50%;
+    height: 1.5px;
+    background: var(--ink-soft);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--stroke-ms) cubic-bezier(.6,.05,.3,1);
+    pointer-events: none;
+    border-radius: 2px;
+  }
+  .row.dim .strike { transform: scaleX(1); }
+
+  .add-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px var(--row-pad-x);
+    color: var(--ink-faint);
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid var(--rule);
+    transition: color 160ms ease, background 160ms ease;
+    font-size: var(--size-item);
+    font-weight: 500;
+  }
+  .add-row:active { background: rgba(63,111,168,0.06); }
+  .add-row .plus {
+    flex: 0 0 24px;
+    font-size: 16px;
+    text-align: center;
+    line-height: 1;
+  }
+  .add-row .label { flex: 1; letter-spacing: 0.01em; }
+
+  .add-form {
+    padding: 14px var(--row-pad-x) 16px;
+    border-bottom: 1px solid var(--rule);
+    background: rgba(63,111,168,0.05);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .add-form input {
+    width: 100%;
+    font-family: inherit;
+    font-size: var(--size-item);
+    font-weight: 500;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1.5px solid var(--rule);
+    border-radius: 6px;
+    padding: 11px 12px;
+    outline: none;
+    transition: border-color 140ms ease;
+  }
+  .add-form input:focus { border-color: var(--accent); }
+  .add-form input::placeholder { color: var(--ink-faint); font-weight: 400; }
+  .add-form .field { position: relative; }
+  .add-form .field .currency {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: var(--size-item);
+    color: var(--ink-faint);
+    font-weight: 600;
+    pointer-events: none;
+  }
+  .add-form .field.price input { padding-left: 28px; }
+  .add-form .btns { display: flex; gap: 8px; }
+  .add-form .btn {
+    flex: 1;
+    padding: 11px;
+    border-radius: 6px;
+    border: none;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: transform 100ms ease;
+  }
+  .add-form .btn:active { transform: scale(0.97); }
+  .add-form .btn.cancel { background: none; border: 1px solid var(--rule); color: var(--ink-soft); }
+  .add-form .btn.save { background: var(--ink); color: var(--paper); }
+
+  .summary {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 60;
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: saturate(1.2) blur(14px);
+    -webkit-backdrop-filter: saturate(1.2) blur(14px);
+    border-top: 1px solid var(--rule);
+    padding: 12px 20px calc(14px + env(safe-area-inset-bottom));
+  }
+  .sum-inner {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  .sum-left { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .sum-label {
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .sum-total {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  .sum-right {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    text-align: right;
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+  .sum-right b { color: var(--ink); font-weight: 600; }
+  .sum-right .pjn b { color: var(--accent); font-weight: 700; }
+
+  .watermark {
+    position: fixed;
+    right: 14px;
+    bottom: calc(88px + env(safe-area-inset-bottom));
+    z-index: 55;
+    font-family: var(--font-sign);
+    font-style: italic;
+    font-weight: 600;
+    font-size: var(--wm-size);
+    color: var(--accent);
+    opacity: var(--wm-opacity);
+    letter-spacing: 0.02em;
+    pointer-events: none;
+    user-select: none;
+    transform: rotate(-2deg);
+    mix-blend-mode: multiply;
+  }
+
+  .panel-toggle {
+    position: fixed;
+    top: 10px; right: 12px;
+    z-index: 200;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--rule);
+    background: color-mix(in srgb, var(--paper) 92%, transparent);
+    backdrop-filter: blur(8px);
+    color: var(--ink-soft);
+    font-size: 15px;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  }
+  .panel-toggle:active { transform: scale(0.94); }
+
+  .panel {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: color-mix(in srgb, var(--paper) 98%, transparent);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    overflow-y: auto;
+    padding: 22px 20px 60px;
+    display: none;
+  }
+  .panel.open { display: block; }
+  .panel h2 {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 14px;
+    font-weight: 700;
+  }
+  .panel h3 {
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 22px 0 10px;
+    font-weight: 700;
+  }
+  .ctrl {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule);
+    font-size: 13px;
+  }
+  .ctrl label { flex: 1; color: var(--ink); font-weight: 500; }
+  .ctrl input[type="color"] {
+    width: 34px; height: 26px;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    background: none; padding: 0; cursor: pointer;
+  }
+  .ctrl input[type="range"] { flex: 0 0 120px; accent-color: var(--accent); }
+  .ctrl .val {
+    flex: 0 0 42px;
+    text-align: right;
+    font-size: 11px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+  }
+  .ctrl input[type="text"].name-input {
+    flex: 0 0 170px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    padding: 6px 9px;
+    outline: none;
+  }
+  .ctrl input[type="text"].name-input:focus { border-color: var(--accent); }
+
+  .panel-close {
+    width: 100%;
+    margin-top: 24px;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  .panel-close:active { opacity: 0.85; }
+
+  .row-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .mini-btn {
+    flex: 1;
+    padding: 11px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: none;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  .mini-btn:active { background: rgba(0,0,0,0.03); }
+  .mini-btn.danger { color: #b91c1c; }
+
+  .export {
+    margin-top: 12px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: none;
+    color: var(--ink-soft);
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+  .export:active { background: rgba(0,0,0,0.03); }
+  .export-code {
+    margin-top: 10px;
+    width: 100%;
+    height: 150px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    padding: 10px;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+    display: none;
+    resize: vertical;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body::before { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<button class="panel-toggle" id="panelToggle" aria-label="Design controls">⚙︎</button>
+
+<div class="shell">
+  <header>
+    <div class="head-inner">
+      <div class="head-title" id="appTitle">The Reservations</div>
+      <div class="head-meta" id="headMeta"></div>
+    </div>
+  </header>
+
+  <div class="list" id="list"></div>
+</div>
+
+<div class="watermark">Vuja Tsoaela</div>
+
+<div class="summary">
+  <div class="sum-inner">
+    <div class="sum-left">
+      <span class="sum-label">Total</span>
+      <span class="sum-total" id="sumTotal">R 0.00</span>
+    </div>
+    <div class="sum-right">
+      <span>Bought <b id="sumBought">R 0.00</b></span>
+      <span>Left <b id="sumLeft">R 0.00</b></span>
+      <span class="pjn">PayJustNow <b id="sumPJN">R 0.00</b> × 3</span>
+    </div>
+  </div>
+</div>
+
+<div class="panel" id="panel">
+  <h2>Design Playground</h2>
+
+  <h3>App name</h3>
+  <div class="ctrl">
+    <label>Title</label>
+    <input type="text" class="name-input" id="nameInput" maxlength="24" placeholder="The Reservations">
+  </div>
+
+  <h3>Colors</h3>
+  <div class="ctrl"><label>Paper</label><input type="color" data-var="--paper" data-type="color"></div>
+  <div class="ctrl"><label>Ink</label><input type="color" data-var="--ink" data-type="color"></div>
+  <div class="ctrl"><label>Ink soft</label><input type="color" data-var="--ink-soft" data-type="color"></div>
+  <div class="ctrl"><label>Faint</label><input type="color" data-var="--ink-faint" data-type="color"></div>
+  <div class="ctrl"><label>Rule</label><input type="color" data-var="--rule" data-type="color"></div>
+  <div class="ctrl"><label>Accent</label><input type="color" data-var="--accent" data-type="color"></div>
+
+  <h3>Type</h3>
+  <div class="ctrl">
+    <label>Item size</label>
+    <input type="range" min="13" max="20" step="0.5" data-var="--size-item" data-type="px" data-unit="px">
+    <span class="val"></span>
+  </div>
+  <div class="ctrl">
+    <label>Price size</label>
+    <input type="range" min="13" max="22" step="0.5" data-var="--size-price" data-type="px" data-unit="px">
+    <span class="val"></span>
+  </div>
+  <div class="ctrl">
+    <label>Header size</label>
+    <input type="range" min="10" max="18" step="0.5" data-var="--size-head" data-type="px" data-unit="px">
+    <span class="val"></span>
+  </div>
+
+  <h3>Space</h3>
+  <div class="ctrl">
+    <label>Row height</label>
+    <input type="range" min="8" max="28" step="1" data-var="--row-pad-y" data-type="px" data-unit="px">
+    <span class="val"></span>
+  </div>
+  <div class="ctrl">
+    <label>Side padding</label>
+    <input type="range" min="10" max="40" step="2" data-var="--row-pad-x" data-type="px" data-unit="px">
+    <span class="val"></span>
+  </div>
+
+  <h3>Interaction</h3>
+  <div class="ctrl">
+    <label>Dim strength</label>
+    <input type="range" min="0.15" max="0.8" step="0.05" data-var="--dim-opacity" data-type="num">
+    <span class="val"></span>
+  </div>
+  <div class="ctrl">
+    <label>Stroke speed (ms)</label>
+    <input type="range" min="150" max="900" step="20" data-var="--stroke-ms" data-type="ms" data-unit="ms">
+    <span class="val"></span>
+  </div>
+
+  <h3>Watermark</h3>
+  <div class="ctrl">
+    <label>Opacity</label>
+    <input type="range" min="0.08" max="0.7" step="0.02" data-var="--wm-opacity" data-type="num">
+    <span class="val"></span>
+  </div>
+  <div class="ctrl">
+    <label>Size</label>
+    <input type="range" min="12" max="30" step="1" data-var="--wm-size" data-type="px" data-unit="px">
+    <span class="val"></span>
+  </div>
+
+  <button class="panel-close" id="panelClose">Close</button>
+
+  <div class="row-actions">
+    <button class="mini-btn" id="resetPrices">Reset prices</button>
+    <button class="mini-btn" id="resetDims">Uncheck all</button>
+  </div>
+  <div class="row-actions">
+    <button class="mini-btn danger" id="resetAll">Reset everything</button>
+  </div>
+
+  <button class="export" id="exportBtn">Export my settings</button>
+  <textarea class="export-code" id="exportCode" readonly></textarea>
+</div>
+
+<script>
+const BASE_PRICES = {
+  "Tastic Long Grain Parboiled White Rice": 37.95,
+  "Lean Beef Mince": 79.99,
+  "Albany Superior Brown Bread": 15.00,
+  "Albany Superior White Bread": 26.39,
+  "Flora Light 40% Fat Spread": 69.99,
+  "Eggbert Large Eggs": 117.69,
+  "Imbo Popcorn Kernels": 21.99,
+  "Chelsea Spheres Chocolate Coated Biscuits": 16.99,
+  "Danone NutriDay Flavoured Low Fat Smooth Yoghurt": 39.99,
+  "LUX Soft Caress Beauty Soap Bar": 19.99,
+  "OMO Supersoak Hand Washing Powder": 69.99,
+  "Kellogg's Beef Flavour Instant Noodles": 39.99,
+  "White Star Super Maize Meal": 95.99,
+  "Oros Orange Flavoured Concentrated Squash": 36.99,
+  "Freshmark Peeled Carrots": 14.99,
+  "Thirsti Still Natural Spring Water": 6.95,
+  "Just Wine Merlot Red Wine": 49.99,
+  "Clover Medium Cream Maas": 34.00,
+  "Whole Grilled Salt & Pepper Chicken": 94.99,
+  "White Hamburger Rolls": 28.99,
+  "Trio of Salad": 39.99,
+  "White Hotdog Rolls": 27.99
+};
+
+const STORAGE_KEY = "reservations_v1";
+const SETTINGS_KEY = "reservations_settings_v1";
+
+let state = loadState();
+
+function loadState() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    if (s) {
+      const p = JSON.parse(s);
+      return {
+        dim: p.dim || {},
+        prices: p.prices || {},
+        cleared: p.cleared || {},
+        custom: Array.isArray(p.custom) ? p.custom : [],
+        removed: Array.isArray(p.removed) ? p.removed : [],
+        name: p.name || "The Reservations"
+      };
+    }
+  } catch (e) {}
+  return { dim: {}, prices: {}, cleared: {}, custom: [], removed: [], name: "The Reservations" };
+}
+function saveState() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+}
+
+function allItems() {
+  const base = Object.keys(BASE_PRICES)
+    .filter(n => !state.removed.includes(n))
+    .map(n => ({ name: n, base: BASE_PRICES[n], custom: false }));
+  const custom = state.custom.map(c => ({
+    name: c.name,
+    base: parseFloat(c.price) || 0,
+    custom: true
+  }));
+  return [...base, ...custom];
+}
+
+function priceOf(name) {
+  if (state.cleared[name]) return 0;
+  const p = state.prices[name];
+  if (p !== undefined && p !== "" && !isNaN(parseFloat(p))) return parseFloat(p);
+  const item = allItems().find(i => i.name === name);
+  return item ? item.base : 0;
+}
+function isEdited(name) {
+  return !state.cleared[name] && state.prices[name] !== undefined && state.prices[name] !== "";
+}
+function isCleared(name) { return !!state.cleared[name]; }
+function fmt(n) { return "R " + n.toFixed(2); }
+
+const listEl = document.getElementById("list");
+let editing = null;
+let addOpen = false;
+
+function render() {
+  listEl.innerHTML = "";
+  const items = allItems();
+
+  items.forEach((item, i) => {
+    const name = item.name;
+    const row = document.createElement("div");
+    row.className = "row" + (state.dim[name] ? " dim" : "");
+    row.dataset.name = name;
+
+    const idx = document.createElement("div");
+    idx.className = "idx";
+    idx.textContent = String(i + 1).padStart(2, "0");
+
+    const nm = document.createElement("div");
+    nm.className = "name";
+    nm.textContent = name;
+
+    let priceEl;
+    if (editing === name) {
+      priceEl = document.createElement("input");
+      priceEl.className = "price-input";
+      priceEl.type = "number";
+      priceEl.inputMode = "decimal";
+      priceEl.step = "0.01";
+      priceEl.min = "0";
+      priceEl.value = priceOf(name) ? priceOf(name).toFixed(2) : "";
+      priceEl.addEventListener("click", e => e.stopPropagation());
+      priceEl.addEventListener("keydown", e => {
+        if (e.key === "Enter") commitEdit(priceEl.value, name);
+        if (e.key === "Escape") { editing = null; render(); }
+      });
+      priceEl.addEventListener("blur", () => {
+        setTimeout(() => { if (editing === name) commitEdit(priceEl.value, name); }, 60);
+      });
+      requestAnimationFrame(() => { priceEl.focus(); priceEl.select(); });
+    } else {
+      priceEl = document.createElement("button");
+      priceEl.className = "price-btn" + (isEdited(name) ? " edited" : "") + (isCleared(name) ? " empty" : "");
+      priceEl.type = "button";
+      priceEl.textContent = isCleared(name) ? "R —" : fmt(priceOf(name));
+      priceEl.setAttribute("aria-label", "Edit price");
+      priceEl.addEventListener("click", (e) => {
+        e.stopPropagation();
+        editing = name;
+        render();
+      });
+    }
+
+    const strike = document.createElement("div");
+    strike.className = "strike";
+
+    const clearBtn = document.createElement("button");
+    clearBtn.className = "icon clear";
+    clearBtn.type = "button";
+    clearBtn.textContent = "↻";
+    clearBtn.setAttribute("aria-label", "Clear price");
+    clearBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      clearPrice(name);
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "icon remove";
+    removeBtn.type = "button";
+    removeBtn.textContent = "×";
+    removeBtn.setAttribute("aria-label", "Remove item");
+    removeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      removeItem(name, item.custom);
+    });
+
+    row.append(idx, nm, priceEl, clearBtn, removeBtn, strike);
+
+    row.addEventListener("click", (e) => {
+      if (editing === name) return;
+      if (e.target.closest("button") || e.target.closest("input")) return;
+      toggleDim(name, row);
+    });
+
+    listEl.appendChild(row);
+  });
+
+  if (addOpen) {
+    const form = document.createElement("div");
+    form.className = "add-form";
+    form.innerHTML = `
+      <input type="text" id="newName" placeholder="Item name" autocomplete="off">
+      <div class="field price">
+        <span class="currency">R</span>
+        <input type="number" id="newPrice" inputmode="decimal" step="0.01" min="0" placeholder="0.00">
+      </div>
+      <div class="btns">
+        <button class="btn cancel" id="addCancel" type="button">Cancel</button>
+        <button class="btn save" id="addSave" type="button">Add item</button>
+      </div>`;
+    listEl.appendChild(form);
+
+    const nameInput = form.querySelector("#newName");
+    const priceInput = form.querySelector("#newPrice");
+    requestAnimationFrame(() => nameInput.focus());
+
+    const save = () => {
+      const nm = nameInput.value.trim();
+      const pr = parseFloat(priceInput.value);
+      if (!nm) { nameInput.focus(); return; }
+      if (isNaN(pr) || pr < 0) { priceInput.focus(); return; }
+      state.custom.push({ name: nm, price: pr.toFixed(2) });
+      saveState();
+      addOpen = false;
+      render();
+    };
+
+    form.querySelector("#addSave").onclick = save;
+    form.querySelector("#addCancel").onclick = () => { addOpen = false; render(); };
+    [nameInput, priceInput].forEach(inp => {
+      inp.addEventListener("keydown", e => {
+        if (e.key === "Enter") save();
+        if (e.key === "Escape") { addOpen = false; render(); }
+      });
+    });
+  } else {
+    const addRow = document.createElement("div");
+    addRow.className = "add-row";
+    addRow.innerHTML = `<span class="plus">+</span><span class="label">Add item</span>`;
+    addRow.addEventListener("click", () => { addOpen = true; render(); });
+    listEl.appendChild(addRow);
+  }
+
+  updateSummary();
+  updateHeader();
+}
+
+function toggleDim(name, row) {
+  state.dim[name] = !state.dim[name];
+  if (!state.dim[name]) delete state.dim[name];
+  saveState();
+  row.classList.toggle("dim", !!state.dim[name]);
+  updateSummary();
+  updateHeader();
+}
+
+function commitEdit(raw, name) {
+  const cleaned = String(raw).trim();
+  delete state.cleared[name];
+  if (cleaned === "") {
+    delete state.prices[name];
+  } else {
+    const n = parseFloat(cleaned);
+    if (!isNaN(n) && n >= 0) state.prices[name] = n.toFixed(2);
+  }
+  editing = null;
+  saveState();
+  render();
+}
+
+function clearPrice(name) {
+  state.cleared[name] = true;
+  delete state.prices[name];
+  saveState();
+  render();
+}
+
+function removeItem(name, isCustom) {
+  if (!confirm(`Remove "${name}" from the list?`)) return;
+  if (isCustom) {
+    state.custom = state.custom.filter(c => c.name !== name);
+  } else {
+    if (!state.removed.includes(name)) state.removed.push(name);
+  }
+  delete state.dim[name];
+  delete state.prices[name];
+  delete state.cleared[name];
+  saveState();
+  render();
+}
+
+function updateSummary() {
+  let bought = 0, left = 0;
+  allItems().forEach(item => {
+    const p = priceOf(item.name);
+    if (state.dim[item.name]) bought += p;
+    else left += p;
+  });
+  const total = bought + left;
+  document.getElementById("sumTotal").textContent = fmt(total);
+  document.getElementById("sumBought").textContent = fmt(bought);
+  document.getElementById("sumLeft").textContent = fmt(left);
+  document.getElementById("sumPJN").textContent = fmt(total / 3);
+}
+
+function updateHeader() {
+  const items = allItems();
+  const doneCount = Object.keys(state.dim).length;
+  let total = 0;
+  items.forEach(i => total += priceOf(i.name));
+  document.getElementById("headMeta").textContent =
+    `${items.length} items · ${doneCount} done · ${fmt(total)}`;
+  document.getElementById("appTitle").textContent = state.name || "The Reservations";
+  document.title = state.name || "The Reservations";
+}
+
+const panel = document.getElementById("panel");
+document.getElementById("panelToggle").onclick = () => panel.classList.add("open");
+document.getElementById("panelClose").onclick = () => panel.classList.remove("open");
+
+const root = document.documentElement;
+
+const DEFAULTS = {
+  "--paper": "#eceef1",
+  "--ink": "#2b2f36",
+  "--ink-soft": "#6b7280",
+  "--ink-faint": "#b0b5bc",
+  "--rule": "#c9cdd3",
+  "--accent": "#3f6fa8",
+  "--size-item": 15,
+  "--size-price": 15,
+  "--size-head": 12,
+  "--row-pad-y": 16,
+  "--row-pad-x": 20,
+  "--dim-opacity": 0.42,
+  "--stroke-ms": 420,
+  "--wm-opacity": 0.35,
+  "--wm-size": 17
+};
+
+(function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+    Object.entries(s).forEach(([k, v]) => root.style.setProperty(k, v));
+  } catch (e) {}
+})();
+
+document.querySelectorAll("[data-var]").forEach(el => {
+  const varName = el.dataset.var;
+  const type = el.dataset.type;
+
+  const current = getComputedStyle(root).getPropertyValue(varName).trim() || DEFAULTS[varName];
+  if (type === "color") {
+    el.value = toHex(current);
+  } else {
+    el.value = parseFloat(current);
+    const valEl = el.parentElement.querySelector(".val");
+    if (valEl) valEl.textContent = el.value + (el.dataset.unit || "");
+  }
+
+  el.addEventListener("input", () => {
+    const v = el.value;
+    root.style.setProperty(varName, type === "color" ? v : v + (el.dataset.unit || ""));
+    if (el.dataset.unit) {
+      const valEl = el.parentElement.querySelector(".val");
+      if (valEl) valEl.textContent = v + el.dataset.unit;
+    }
+    persistSettings();
+  });
+});
+
+function persistSettings() {
+  const out = {};
+  document.querySelectorAll("[data-var]").forEach(el => {
+    const v = el.value;
+    out[el.dataset.var] = el.dataset.type === "color" ? v : v + (el.dataset.unit || "");
+  });
+  try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(out)); } catch (e) {}
+}
+
+function toHex(c) {
+  if (c.startsWith("#")) return c;
+  const m = c.match(/\d+/g);
+  if (!m) return "#000000";
+  return "#" + m.slice(0,3).map(n => (+n).toString(16).padStart(2,"0")).join("");
+}
+
+const nameInput = document.getElementById("nameInput");
+nameInput.value = state.name || "";
+nameInput.addEventListener("input", () => {
+  state.name = nameInput.value.trim() || "The Reservations";
+  saveState();
+  updateHeader();
+});
+
+document.getElementById("resetPrices").onclick = () => {
+  if (!confirm("Reset all prices back to the originals?")) return;
+  state.prices = {};
+  state.cleared = {};
+  saveState();
+  render();
+};
+document.getElementById("resetDims").onclick = () => {
+  state.dim = {};
+  saveState();
+  render();
+};
+document.getElementById("resetAll").onclick = () => {
+  if (!confirm("Reset everything, including removed items?")) return;
+  state = { dim: {}, prices: {}, cleared: {}, custom: [], removed: [], name: state.name };
+  saveState();
+  render();
+};
+
+document.getElementById("exportBtn").onclick = () => {
+  const out = {
+    name: state.name,
+    design: {},
+    prices: state.prices,
+    cleared: state.cleared,
+    custom: state.custom,
+    removed: state.removed
+  };
+  document.querySelectorAll("[data-var]").forEach(el => {
+    out.design[el.dataset.var] = el.value + (el.dataset.type === "color" ? "" : (el.dataset.unit || ""));
+  });
+  const code = document.getElementById("exportCode");
+  code.style.display = "block";
+  code.value = JSON.stringify(out, null, 2);
+  code.select();
+};
+
+render();
+</script>
+</body>
+</html>
